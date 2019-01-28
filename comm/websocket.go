@@ -158,3 +158,10 @@ func (w *WebsocketClient) Receive(filter *EventFilter) (chan *EventResponse, err
 func (w WebsocketClient) Find(filter *EventFilter) (chan *EventResponse, error) {
 	return w.doReceive("find", filter)
 }
+
+func NewWebsocketClient(serverURL string) *WebsocketClient {
+	return &WebsocketClient{
+		baseURL:     serverURL,
+		connections: map[string]*theiaConn{},
+	}
+}
