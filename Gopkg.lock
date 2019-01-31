@@ -2,14 +2,6 @@
 
 
 [[projects]]
-  branch = "master"
-  digest = "1:a0fc2c9b51cf3e15c3a9693bf98d76a486fd36d2d92fb42baeaa7e419889d90d"
-  name = "github.com/akamensky/argparse"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "b33e05fb8d6987f2a8313eb04b71c37f98d555aa"
-
-[[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
@@ -37,7 +29,6 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/akamensky/argparse",
     "github.com/fsnotify/fsnotify",
     "github.com/gorilla/websocket",
   ]
