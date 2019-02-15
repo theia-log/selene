@@ -1,6 +1,9 @@
 package cli
 
-import "flag"
+import (
+	"flag"
+	"fmt"
+)
 
 type GlobalFlags struct {
 	ServerURL *string
@@ -13,6 +16,8 @@ type QueryFlags struct {
 }
 
 type WatcherFlags struct {
+	*GlobalFlags
+	File *string
 }
 
 func SetupGlobalFlags() *GlobalFlags {
@@ -43,4 +48,19 @@ func SetupGlobalFlagsOn(fg *flag.FlagSet) *GlobalFlags {
 	gf.Port = fg.Int("p", 0, "Theia port")
 
 	return gf
+}
+
+func (gf *GlobalFlags) GetServerURL() (string, error) {
+	if gf.ServerURL != nil {
+		return *gf.ServerURL, nil
+	}
+	if gf.Host == nil {
+		return "", fmt.Errorf("hostname missing")
+	}
+
+	if gf.Port == nil {
+		return "", fmt.Errorf("port missing")
+	}
+
+	return fmt.Sprintf("ws://%s:%d", *gf.Host, *gf.Port), nil // FIXME: This assumes unsecure (ws) connection
 }
