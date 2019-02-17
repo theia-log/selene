@@ -161,7 +161,9 @@ func (w WebsocketClient) Find(filter *EventFilter) (chan *EventResponse, error) 
 
 func NewWebsocketClient(serverURL string) *WebsocketClient {
 	return &WebsocketClient{
-		baseURL:     serverURL,
-		connections: map[string]*theiaConn{},
+		baseURL: serverURL,
+		connections: map[string]*theiaConn{
+			"event": NewConn(serverURL, "event"),
+		},
 	}
 }

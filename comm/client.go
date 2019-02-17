@@ -15,7 +15,7 @@ type EventResponse struct {
 }
 
 type Client interface {
-	Send(event model.Event) error
+	Send(event *model.Event) error
 	Receive(filter *EventFilter) (chan *EventResponse, error)
 	Find(filter *EventFilter) (chan *EventResponse, error)
 }

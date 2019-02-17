@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 	"github.com/theia-log/selene/model"
 
 	"github.com/theia-log/selene/comm"
@@ -52,5 +52,9 @@ func RunWatcher(args *WatcherFlags) error {
 			// TODO: Stop client here
 		}
 	}()
+	return nil
+}
+
+func WatcherCommand(args []string) error {
 	return nil
 }
