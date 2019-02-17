@@ -3,7 +3,10 @@ package cli
 import (
 	"flag"
 	"fmt"
+	"strings"
 )
+
+type StringNVar []string
 
 type GlobalFlags struct {
 	ServerURL *string
@@ -18,6 +21,7 @@ type QueryFlags struct {
 type WatcherFlags struct {
 	*GlobalFlags
 	File *string
+	Tags StringNVar
 }
 
 func SetupGlobalFlags() *GlobalFlags {
@@ -35,8 +39,13 @@ func SetupQueryFlags() (*QueryFlags, *flag.FlagSet) {
 	return nil, nil
 }
 
-func SetupWatcherFlags() (*QueryFlags, *flag.FlagSet) {
-	return nil, nil
+func SetupWatcherFlags() (*WatcherFlags, *flag.FlagSet) {
+	flags := flag.NewFlagSet("watch", flag.ExitOnError)
+	watcherFlags := &WatcherFlags{
+		GlobalFlags: SetupGlobalFlagsOn(flags),
+	}
+	watcherFlags.File = flags.String("f", "", "File to watch for changes")
+	return watcherFlags, flags
 }
 
 func SetupGlobalFlagsOn(fg *flag.FlagSet) *GlobalFlags {
@@ -63,4 +72,16 @@ func (gf *GlobalFlags) GetServerURL() (string, error) {
 	}
 
 	return fmt.Sprintf("ws://%s:%d", *gf.Host, *gf.Port), nil // FIXME: This assumes unsecure (ws) connection
+}
+
+func (n *StringNVar) String() string {
+	if n == nil || *n == nil {
+		return ""
+	}
+	return strings.Join(*n, ",")
+}
+
+func (n *StringNVar) Set(value string) error {
+	*n = append(*n, value)
+	return nil
 }

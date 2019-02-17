@@ -17,11 +17,11 @@ import (
 func RunWatcher(args *WatcherFlags) error {
 	daemon := watcher.NewWatchDaemon()
 
-	if args.File == nil {
+	if args.File == nil || *args.File == "" {
 		return fmt.Errorf("no file to watch")
 	}
 
-	source, err := daemon.AddSource(*args.File, watcher.NewEventSource(*args.File))
+	source, err := daemon.AddSource(*args.File, watcher.NewFileSource(*args.File))
 	if err != nil {
 		return err
 	}
@@ -45,16 +45,30 @@ func RunWatcher(args *WatcherFlags) error {
 		}
 	})
 
+	if err := daemon.Start(); err != nil {
+		return err
+	}
+
+	done := make(chan bool)
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		for _ = range c {
 			// TODO: Stop client here
+			done <- true
 		}
 	}()
+
+	<-done
+
 	return nil
 }
 
 func WatcherCommand(args []string) error {
-	return nil
+	watcherFlags, flagSet := SetupWatcherFlags()
+	err := flagSet.Parse(args)
+	if err != nil {
+		return err
+	}
+	return RunWatcher(watcherFlags)
 }
