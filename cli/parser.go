@@ -16,6 +16,12 @@ type GlobalFlags struct {
 }
 
 type QueryFlags struct {
+	*GlobalFlags
+	Start   *float64
+	End     *float64
+	Tags    StringNVar
+	Content *string
+	Order   *string
 }
 
 type WatcherFlags struct {
@@ -36,7 +42,13 @@ func SetupGlobalFlags() *GlobalFlags {
 }
 
 func SetupQueryFlags() (*QueryFlags, *flag.FlagSet) {
-	return nil, nil
+	flags := flag.NewFlagSet("query", flag.ExitOnError)
+	queryFlags := &QueryFlags{}
+
+	queryFlags.Start = flags.Float64("s", 0.0, "Start timestamp")
+	queryFlags.End = flags.Float64("e", 0.0, "End timestamp")
+
+	return queryFlags, flags
 }
 
 func SetupWatcherFlags() (*WatcherFlags, *flag.FlagSet) {

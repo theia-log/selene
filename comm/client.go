@@ -1,12 +1,21 @@
 package comm
 
-import "github.com/theia-log/selene/model"
+import (
+	"encoding/json"
+
+	"github.com/theia-log/selene/model"
+)
 
 type EventFilter struct {
+	Start   float64  `json:"start,omitempty"`
+	End     *float64 `json:"end,omitempty"`
+	Tags    []string `json:"tags,omitempty"`
+	Content *string  `json:"content,omitempty"`
+	Order   *string  `json:"order,omitempty"`
 }
 
 func (f *EventFilter) DumpBytes() ([]byte, error) {
-	return nil, nil
+	return json.Marshal(f)
 }
 
 type EventResponse struct {
