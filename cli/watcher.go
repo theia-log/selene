@@ -32,11 +32,16 @@ func RunWatcher(args *WatcherFlags) error {
 	}
 	client := comm.NewWebsocketClient(serverURL)
 
+	tags := []string{}
+	if args.Tags != nil && len(args.Tags) > 0 {
+		tags = args.Tags
+	}
+
 	source.OnSourceEvent(func(src string, diff []byte) {
 		ev := &model.Event{
 			ID:        uuid.Must(uuid.NewV4()).String(),
 			Source:    src,
-			Tags:      []string{},
+			Tags:      tags,
 			Timestamp: float64(time.Now().UnixNano()) / float64(time.Millisecond),
 			Content:   string(diff),
 		}

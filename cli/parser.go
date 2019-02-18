@@ -43,8 +43,10 @@ func SetupWatcherFlags() (*WatcherFlags, *flag.FlagSet) {
 	flags := flag.NewFlagSet("watch", flag.ExitOnError)
 	watcherFlags := &WatcherFlags{
 		GlobalFlags: SetupGlobalFlagsOn(flags),
+		Tags:        StringNVar{},
 	}
 	watcherFlags.File = flags.String("f", "", "File to watch for changes")
+	flags.Var(&watcherFlags.Tags, "t", "Tag the event.")
 	return watcherFlags, flags
 }
 
