@@ -1,7 +1,10 @@
 package model
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -18,6 +21,42 @@ func (ev *Event) Load(eventData string) (err error) {
 }
 
 func (ev *Event) LoadBytes(eventData []byte) (err error) {
+	reader := bytes.NewReader(eventData)
+	_, headerSize, contentSize, err := parsePreamble(bufio.NewReader(reader))
+	if err != nil {
+		return err
+	}
+
+	buff := make([]byte, headerSize)
+	if read, err := reader.Read(buff); err != nil || int64(read) != headerSize {
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("corrupted header")
+	}
+
+	scanner := bufio.NewScanner(bytes.NewReader(buff))
+
+	for {
+		if scanner.Err() != nil {
+			return scanner.Err()
+		}
+		if !scanner.Scan() {
+			break
+		}
+		// line := scanner.Text()
+
+	}
+	buff = make([]byte, contentSize)
+	if read, err := reader.Read(buff); err != nil || int64(read) != contentSize {
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("corrupted content")
+	}
+
+	ev.Content = string(buff)
+
 	return
 }
 
@@ -48,5 +87,25 @@ func (ev *Event) dump() string {
 func (ev *Event) DumpBytes() (eventData []byte, err error) {
 	evString, err := ev.Dump()
 	eventData = []byte(evString)
+	return
+}
+
+func parsePreamble(event *bufio.Reader) (total, header, content int64, err error) {
+	lnbytes, err := event.ReadBytes('\n')
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	line := string(lnbytes)
+	if !strings.HasPrefix(line, "event:") {
+		return 0, 0, 0, fmt.Errorf("invalid preamble")
+	}
+	parts := strings.Split(strings.TrimSpace(line)[6:], " ")
+	total, err = strconv.ParseInt(parts[0], 10, 64)
+	if err != nil {
+		header, err = strconv.ParseInt(parts[1], 10, 64)
+	}
+	if err != nil {
+		content, err = strconv.ParseInt(parts[2], 10, 64)
+	}
 	return
 }

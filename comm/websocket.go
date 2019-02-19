@@ -1,8 +1,10 @@
 package comm
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/gorilla/websocket"
 	"github.com/theia-log/selene/model"
@@ -11,6 +13,29 @@ import (
 type theiaData struct {
 	data []byte
 	err  error
+}
+
+func (d *theiaData) IsACK() bool {
+	if d.data == nil {
+		return false
+	}
+	return string(d.data) == "ok"
+}
+
+func (d *theiaData) GetServerError() error {
+	if d.data == nil {
+		return nil
+	}
+	str := string(d.data)
+	if strings.HasPrefix(str, "{\"error\"") {
+		errMap := map[string]string{}
+		if err := json.Unmarshal(d.data, &errMap); err != nil {
+			// it is not a server error
+			return nil
+		}
+		return fmt.Errorf(errMap["error"])
+	}
+	return nil
 }
 
 type theiaConn struct {
@@ -52,6 +77,10 @@ func (t *theiaConn) Read() chan *theiaData {
 			case websocket.BinaryMessage:
 				dataChan <- &theiaData{
 					data: data,
+				}
+			case websocket.TextMessage:
+				dataChan <- &theiaData{
+					data: []byte(data),
 				}
 			default:
 				log.Println("Ignoring message of type: ", messageType)
@@ -134,6 +163,17 @@ func (w *WebsocketClient) doReceive(endpoint string, filter *EventFilter) (chan 
 				}
 				continue
 			}
+			if data.IsACK() {
+				// server ACK. We san safely ignore this message.
+				continue
+			}
+			if err = data.GetServerError(); err != nil {
+				// Server responded with an error.
+				eventChan <- &EventResponse{
+					Error: err,
+				}
+				continue
+			}
 			ev := &model.Event{}
 			if err = ev.LoadBytes(data.data); err != nil {
 				eventChan <- &EventResponse{
@@ -164,6 +204,8 @@ func NewWebsocketClient(serverURL string) *WebsocketClient {
 		baseURL: serverURL,
 		connections: map[string]*theiaConn{
 			"event": NewConn(serverURL, "event"),
+			"live":  NewConn(serverURL, "live"),
+			"find":  NewConn(serverURL, "find"),
 		},
 	}
 }

@@ -22,6 +22,7 @@ type QueryFlags struct {
 	Tags    StringNVar
 	Content *string
 	Order   *string
+	Live    *bool
 }
 
 type WatcherFlags struct {
@@ -43,10 +44,18 @@ func SetupGlobalFlags() *GlobalFlags {
 
 func SetupQueryFlags() (*QueryFlags, *flag.FlagSet) {
 	flags := flag.NewFlagSet("query", flag.ExitOnError)
-	queryFlags := &QueryFlags{}
+	queryFlags := &QueryFlags{
+		GlobalFlags: SetupGlobalFlagsOn(flags),
+		Tags:        StringNVar{},
+	}
 
 	queryFlags.Start = flags.Float64("s", 0.0, "Start timestamp")
 	queryFlags.End = flags.Float64("e", 0.0, "End timestamp")
+	queryFlags.Content = flags.String("c", "", "Match event content (regular expression)")
+	queryFlags.Order = flags.String("sort", "", "Sort order (only if not live). Possible values are asc or desc.")
+	queryFlags.Live = flags.Bool("live", false, "Whether to query for live events in real time.")
+
+	flags.Var(&queryFlags.Tags, "t", "Match if any tag with this value (regular expression).")
 
 	return queryFlags, flags
 }
