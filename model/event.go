@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 )
@@ -17,24 +18,27 @@ type Event struct {
 }
 
 func (ev *Event) Load(eventData string) (err error) {
-	return
+	return ev.LoadBytes([]byte(eventData))
 }
 
 func (ev *Event) LoadBytes(eventData []byte) (err error) {
 	reader := bytes.NewReader(eventData)
-	_, headerSize, contentSize, err := parsePreamble(bufio.NewReader(reader))
+	preamble, _, headerSize, contentSize, err := parsePreamble(bufio.NewReader(reader))
 	if err != nil {
 		return err
 	}
 
 	buff := make([]byte, headerSize)
+	_, err = reader.Seek(preamble, io.SeekStart)
+	if err != nil {
+		return err
+	}
 	if read, err := reader.Read(buff); err != nil || int64(read) != headerSize {
 		if err != nil {
 			return err
 		}
 		return fmt.Errorf("corrupted header")
 	}
-
 	scanner := bufio.NewScanner(bytes.NewReader(buff))
 
 	for {
@@ -44,7 +48,26 @@ func (ev *Event) LoadBytes(eventData []byte) (err error) {
 		if !scanner.Scan() {
 			break
 		}
-		// line := scanner.Text()
+		line := scanner.Text()
+		if line != "" {
+			parts := strings.Split(line, ":")
+			key := strings.TrimSpace(parts[0])
+			value := strings.TrimSpace(parts[1])
+			switch key {
+			case "id":
+				ev.ID = value
+			case "source":
+				ev.Source = value
+			case "timestamp":
+				if ev.Timestamp, err = strconv.ParseFloat(value, 64); err != nil {
+					return err
+				}
+			case "tags":
+				ev.Tags = strings.Split(value, ",")
+			default:
+				// ignore unknown key
+			}
+		}
 
 	}
 	buff = make([]byte, contentSize)
@@ -90,21 +113,22 @@ func (ev *Event) DumpBytes() (eventData []byte, err error) {
 	return
 }
 
-func parsePreamble(event *bufio.Reader) (total, header, content int64, err error) {
+func parsePreamble(event *bufio.Reader) (preamble, total, header, content int64, err error) {
 	lnbytes, err := event.ReadBytes('\n')
 	if err != nil {
-		return 0, 0, 0, err
+		return 0, 0, 0, 0, err
 	}
+	preamble = int64(len(lnbytes))
 	line := string(lnbytes)
 	if !strings.HasPrefix(line, "event:") {
-		return 0, 0, 0, fmt.Errorf("invalid preamble")
+		return 0, 0, 0, 0, fmt.Errorf("invalid preamble")
 	}
-	parts := strings.Split(strings.TrimSpace(line)[6:], " ")
+	parts := strings.Split(strings.TrimSpace(strings.TrimSpace(line)[6:]), " ")
 	total, err = strconv.ParseInt(parts[0], 10, 64)
-	if err != nil {
+	if err == nil {
 		header, err = strconv.ParseInt(parts[1], 10, 64)
 	}
-	if err != nil {
+	if err == nil {
 		content, err = strconv.ParseInt(parts[2], 10, 64)
 	}
 	return
