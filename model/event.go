@@ -9,18 +9,30 @@ import (
 	"strings"
 )
 
+// Event defines the model structure of an event.
+// Each event must have an ID, a globally unique identifier,
+// and timestamp, floating point number of seconds from 1.1.1970
+// with high degree of precision.
+// The event usually contanis a content, although that is not
+// strictly necessary. The event may contain a source and tags.
 type Event struct {
-	ID        string
-	Timestamp float64
-	Source    string
-	Tags      []string
-	Content   string
+	ID        string   `json:"id"`
+	Timestamp float64  `json:"timestamp"`
+	Source    string   `json:"source,omitempty"`
+	Tags      []string `json:"tags,omitempty"`
+	Content   string   `json:"content,omitempty"`
 }
 
+// Load loads (parses) an event from a given string.
+// This expects for the preamble to be present in the
+// given event data string.
 func (ev *Event) Load(eventData string) (err error) {
 	return ev.LoadBytes([]byte(eventData))
 }
 
+// LoadBytes loads (parses) an event from an array of bytes.
+// This expects for the preamble to be present in the
+// given event data.
 func (ev *Event) LoadBytes(eventData []byte) (err error) {
 	reader := bytes.NewReader(eventData)
 	preamble, _, headerSize, contentSize, err := parsePreamble(bufio.NewReader(reader))
@@ -83,6 +95,14 @@ func (ev *Event) LoadBytes(eventData []byte) (err error) {
 	return
 }
 
+// Dump serializes the given event to a string representation.
+// An event may look something like this:
+// 	event: 155 133 22
+//	id:331c531d-6eb4-4fb5-84d3-ea6937b01fdd
+//	timestamp: 1509989630.6749051
+//	source:/dev/sensors/door1-sensor
+//	tags:sensors,home,doors,door1
+//	Door has been unlocked
 func (ev *Event) Dump() (eventData string, err error) {
 	event := ev.dump()
 	contentSize := len([]byte(ev.Content))
@@ -107,12 +127,18 @@ func (ev *Event) dump() string {
 	return builder.String()
 }
 
+// DumpBytes serializes an event data as an array of bytes.
+// The serialized bytes are the UTF-8 encoding of the serialized
+// data of the event as a string.
 func (ev *Event) DumpBytes() (eventData []byte, err error) {
 	evString, err := ev.Dump()
 	eventData = []byte(evString)
 	return
 }
 
+// parsePreamble parses the Event preamble to extract the total
+// number of bytes, the size of the header and content of the
+// Event.
 func parsePreamble(event *bufio.Reader) (preamble, total, header, content int64, err error) {
 	lnbytes, err := event.ReadBytes('\n')
 	if err != nil {
