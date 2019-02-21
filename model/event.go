@@ -7,6 +7,8 @@ import (
 	"io"
 	"strconv"
 	"strings"
+
+	uuid "github.com/satori/go.uuid"
 )
 
 // Event defines the model structure of an event.
@@ -158,4 +160,8 @@ func parsePreamble(event *bufio.Reader) (preamble, total, header, content int64,
 		content, err = strconv.ParseInt(parts[2], 10, 64)
 	}
 	return
+}
+
+func NewEventID() string {
+	return uuid.Must(uuid.NewV4()).String()
 }
