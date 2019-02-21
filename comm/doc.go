@@ -94,10 +94,8 @@
 //		// Receive reads events in real-time
 //		respChan, err := client.Receive(&comm.EventFilter{
 //			Start: 	1550710745.10, 	// return only events that happened after this time
-//			End:	1550710746.90,	// but before this time
 //			Tags: 	[]string{"sensor", "temp.+"},  // events that contain these tags
 //			Content: "\\d+C",		// content that matches this regex
-//			Order: 	"asc",			// ascending, by timestamp
 //		})
 //
 //		if err != nil {
