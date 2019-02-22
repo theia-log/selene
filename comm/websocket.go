@@ -10,8 +10,8 @@ import (
 	"github.com/theia-log/selene/model"
 )
 
-// theiaData represents a data packet or error returned from the
-// raw websocket channel to theia server.
+// theiaData represents a data packet or error returned from the raw websocket
+// channel to theia server.
 type theiaData struct {
 	data []byte
 	err  error
@@ -25,8 +25,8 @@ func (d *theiaData) IsACK() bool {
 	return string(d.data) == "ok"
 }
 
-// GetServerError checks if the data packet from the server is
-// actually an error instead of event data.
+// GetServerError checks if the data packet from the server is actually an error
+// instead of event data.
 // If so, it returns an error. Otherwise returns nil.
 func (d *theiaData) GetServerError() error {
 	if d.data == nil {
@@ -66,11 +66,11 @@ func (t *theiaConn) Send(data []byte) error {
 	return t.conn.WriteMessage(websocket.BinaryMessage, data)
 }
 
-// Read consumes data (websocket messages) from the open
-// websocket channel to theia server.
+// Read consumes data (websocket messages) from the open websocket channel to
+//  theia server.
 // Once the data is received, it is wrapped in theiaData packet.
-// These packets are then published on a theiaData channel for
-// further processing.
+// These packets are then published on a theiaData channel for further
+// processing.
 func (t *theiaConn) Read() chan *theiaData {
 	dataChan := make(chan *theiaData)
 	go func() {
@@ -106,14 +106,15 @@ func (t *theiaConn) Read() chan *theiaData {
 }
 
 // Close closes the underlying websocket connection with the given reason.
-// A formal close message is issued to the server before breaking up the connection.
+// A formal close message is issued to the server before breaking up
+// the connection.
 func (t *theiaConn) Close(reason string) error {
 	return t.conn.WriteMessage(websocket.CloseMessage,
 		websocket.FormatCloseMessage(websocket.CloseNormalClosure, reason))
 }
 
-// newConn creates new raw theia connection to a given
-// server and for a particular action.
+// newConn creates new raw theia connection to a given server and for a
+// particular action.
 func newConn(baseUrl, action string) *theiaConn {
 	return &theiaConn{
 		url: fmt.Sprintf("%s/%s", baseUrl, action),
@@ -122,17 +123,17 @@ func newConn(baseUrl, action string) *theiaConn {
 
 // WebsocketClient implements the Client interface.
 // Implements a client to a particular Theia server.
-// Connections to the theia actions, like /event, /find and
-// /live are reused if possible - new connections will not be
-// opened if a channel is already established on the endpoint.
+// Connections to the theia actions, like /event, /find and /live are reused if
+// possible - new connections will not be opened if a channel is already
+// established on the endpoint.
 type WebsocketClient struct {
 	baseURL     string
 	connections map[string]*theiaConn
 }
 
 // getConn returns an exiting connection for a particular endpoint.
-// The connections are reused, new connection is created only if a
-// connection to the requested endpoint does not exist.
+// The connections are reused, new connection is created only if a connection to
+// the requested endpoint does not exist.
 func (w *WebsocketClient) getConn(endpoint string) (*theiaConn, error) {
 	conn, ok := w.connections[endpoint]
 	if !ok {
@@ -159,10 +160,10 @@ func (w *WebsocketClient) Send(event *model.Event) error {
 	return conn.Send(data)
 }
 
-// doReceive sends EventFilter data to the endpoint on the server, then
-// listens for events from the server.
-// The returned theiaData packets are decoded to EventResponse structure
-// and published on the EventResponse channel.
+// doReceive sends EventFilter data to the endpoint on the server, then listens
+// for events from the server.
+// The returned theiaData packets are decoded to EventResponse structure and
+// published on the EventResponse channel.
 func (w *WebsocketClient) doReceive(endpoint string, filter *EventFilter) (chan *EventResponse, error) {
 	conn, err := w.getConn(endpoint)
 	if err != nil {
@@ -233,8 +234,8 @@ func (w WebsocketClient) Find(filter *EventFilter) (chan *EventResponse, error) 
 	return w.doReceive("find", filter)
 }
 
-// NewWebsocketClient creates new websocket Client to theia server
-// on the given server URL.
+// NewWebsocketClient creates new websocket Client to theia server on the given
+// server URL.
 func NewWebsocketClient(serverURL string) *WebsocketClient {
 	return &WebsocketClient{
 		baseURL: serverURL,
