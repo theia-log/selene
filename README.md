@@ -1,2 +1,2 @@
 # selene
-Client library and watcher for theia in Go
+![selene](selene.png) Selene is a client library and watcher for theia written in Go.
