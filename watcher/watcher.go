@@ -22,7 +22,7 @@ type EventSource interface {
 	Trigger(diff []byte)
 }
 
-// WatchDaemon is a general interface for manager of event source.
+// WatchDaemon is a general interface for a manager of EventSource sources.
 type WatchDaemon interface {
 	// Start the daemon. Events from the event sources shall be handled after
 	// this point.

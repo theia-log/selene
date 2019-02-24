@@ -11,21 +11,32 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
+// FSNotifyEventSource is a file event source, based on inotify for changes
+// notifications.
 type FSNotifyEventSource struct {
 	*GenericEventSource
+
+	// AbsFilePath absolute path to the file.
 	AbsFilePath string
-	ParentDir   string
-	currentPos  int64
+	// ParentDir the parent directory of the file.
+	ParentDir string
+
+	// cuurentPos the last (current) position in the file.
+	currentPos int64
 }
 
+// AttachToWatcher attaches the parent dir to the inotify watcher.
 func (s *FSNotifyEventSource) AttachToWatcher(watcher *fsnotify.Watcher) error {
 	return watcher.Add(s.ParentDir)
 }
 
+// DetachFromWatcher deatches the parent dir from the inotify watcher.
 func (s *FSNotifyEventSource) DetachFromWatcher(watcher *fsnotify.Watcher) error {
 	return watcher.Remove(s.ParentDir)
 }
 
+// fileAvailable checks if the file is (still) available and sets the position
+// if it is.
 func (s *FSNotifyEventSource) fileAvailable() error {
 	f, err := os.Open(s.AbsFilePath)
 	if err != nil {
@@ -41,6 +52,9 @@ func (s *FSNotifyEventSource) fileAvailable() error {
 	return nil
 }
 
+// calculateDiff calculates the diff from the previous position.
+// The diff contains the bytes from the last position of the file to the end of
+// the file.
 func (s *FSNotifyEventSource) calculateDiff() ([]byte, error) {
 	f, err := os.Open(s.AbsFilePath)
 	if err != nil {
@@ -69,6 +83,8 @@ func (s *FSNotifyEventSource) calculateDiff() ([]byte, error) {
 	return diff, err
 }
 
+// handleFSNotifyEvent called on inotify change event.
+// Checks for file changes and calculates the diff.
 func (s *FSNotifyEventSource) handleFSNotifyEvent(ev fsnotify.Event) error {
 	if ev.Op&fsnotify.Write == fsnotify.Write {
 		diff, err := s.calculateDiff()
@@ -89,6 +105,7 @@ func (s *FSNotifyEventSource) handleFSNotifyEvent(ev fsnotify.Event) error {
 	return nil
 }
 
+// NewFileSource creates new file event source for the given file path.
 func NewFileSource(filePath string) EventSource {
 	parentDir, absPath, err := GetFileParts(filePath)
 	if err != nil {
@@ -106,6 +123,7 @@ func NewFileSource(filePath string) EventSource {
 	return fileSource
 }
 
+// FSNotifyWatcher implements WatcherDaemon based on inotify events.
 type FSNotifyWatcher struct {
 	watcher     *fsnotify.Watcher
 	watchedDirs map[string][]EventSource
@@ -115,6 +133,8 @@ type FSNotifyWatcher struct {
 	done        chan bool
 }
 
+// Start the watcher. When called, the watcher starts to listen for changes in
+// the registered file sources.
 func (f *FSNotifyWatcher) Start() error {
 	f.mux.Lock()
 	defer f.mux.Unlock()
@@ -126,6 +146,8 @@ func (f *FSNotifyWatcher) Start() error {
 	return nil
 }
 
+// Stop stop the watcher. No more event are going to be handled after this call.
+// The inotify watcher is closed and resources are released.
 func (f *FSNotifyWatcher) Stop() error {
 	f.mux.Lock()
 	defer f.mux.Unlock()
@@ -137,6 +159,9 @@ func (f *FSNotifyWatcher) Stop() error {
 	return nil
 }
 
+// AddSource adds an event source to be managed by this watcher dameon.
+// If the event source is an FSNotifyEventSource, it is attached to the
+// underlying fsnotify watcher.
 func (f *FSNotifyWatcher) AddSource(source string, eventSource EventSource) (EventSource, error) {
 	f.mux.Lock()
 	src, ok := f.sources[source]
@@ -161,6 +186,10 @@ func (f *FSNotifyWatcher) AddSource(source string, eventSource EventSource) (Eve
 	return eventSource, nil
 }
 
+// RemoveSource removes the event source and it is no longer managed by this
+// daemon.
+// If the event source is also FSNotifyEventSource it is detached from the
+// underlying fsnotify watcher as well.
 func (f *FSNotifyWatcher) RemoveSource(source string) error {
 	f.mux.Lock()
 	src, ok := f.sources[source]
@@ -183,6 +212,8 @@ func (f *FSNotifyWatcher) RemoveSource(source string) error {
 	return nil
 }
 
+// listenForChanges detaches a go routing that consumes the events from the
+// fsnotify watcher.
 func (f *FSNotifyWatcher) listenForChanges() {
 	go func() {
 		defer func() {
@@ -205,6 +236,8 @@ func (f *FSNotifyWatcher) listenForChanges() {
 	}()
 }
 
+// handleWatcherEvent handles single event raised by the undelying fsnotify
+// watcher.
 func (f *FSNotifyWatcher) handleWatcherEvent(ev fsnotify.Event) {
 	parentDir, absPath, err := GetFileParts(ev.Name)
 	if err != nil {
@@ -228,6 +261,7 @@ func (f *FSNotifyWatcher) handleWatcherEvent(ev fsnotify.Event) {
 	}
 }
 
+// NewWatchDaemon builds a new WatchDaemon.
 func NewWatchDaemon() WatchDaemon {
 	fsWatcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -243,6 +277,8 @@ func NewWatchDaemon() WatchDaemon {
 	}
 }
 
+// GetFileParts splits the file path to the absolute path and the parent
+// directory path.
 func GetFileParts(filePath string) (parentDir string, absPath string, err error) {
 	absPath, err = filepath.Abs(filePath)
 	if err != nil {
