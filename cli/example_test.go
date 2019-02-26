@@ -9,14 +9,28 @@ import (
 
 // ExampleParrot implements a hypothetical parrot that repeats a phrase given
 // as an argument.
+// Invoking with help would give the following output:
+// 		Usage: parrot say [ARGS]
+//
+// 		Hypothetical parrot.
+//
+// 		Commands:
+// 			say - Say a phrase.
+// And then the help for the subcommand can be invoked like this:
+// 	Usage of say:
+// 	-phrase string
+// 		  Phrase to say.
+// 	-times int
+// 		  How many times to repeat the phrase. (default 1)
 func ExampleCommandsCLI() {
 	parrot := cli.NewCommandCLI("parrot", "Hypothetical parrot.")
 
 	parrot.AddCommand("say", func(args []string) error {
-		phrase := flag.String("phrase", "", "Phrase to say.")
-		times := flag.Int("times", 1, "How many times to repeat the phrase.")
+		fs := flag.NewFlagSet("say", flag.ExitOnError)
+		phrase := fs.String("phrase", "", "Phrase to say.")
+		times := fs.Int("times", 1, "How many times to repeat the phrase.")
 
-		flag.Parse()
+		fs.Parse(args)
 
 		for i := 0; i < *times; i++ {
 			fmt.Println(*phrase)
