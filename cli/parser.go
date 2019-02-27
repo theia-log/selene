@@ -35,10 +35,10 @@ type GlobalFlags struct {
 type QueryFlags struct {
 	*GlobalFlags
 
-	// Start timestamp. Match events that ocurred after or at this time.
+	// Start timestamp. Match events that occurred after or at this time.
 	Start *float64
 
-	// End timestamp. Match events that ocurred before or at this time.
+	// End timestamp. Match events that occurred before or at this time.
 	End *float64
 
 	// Tags list of tags to match. The values may be a regular expression.

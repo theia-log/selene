@@ -69,7 +69,7 @@
 //				break	// we're done, no more events
 //			}
 //			if resp.Error != nil {
-//				// an error ocurred, log it
+//				// an error occurred, log it
 //				log.Println("[ERROR]: ", resp.Error.Error())
 //				continue
 //			}
@@ -109,7 +109,7 @@
 //				break	// Server closed the connection, we're done.
 //			}
 //			if resp.Error != nil {
-//				// an error ocurred, log it
+//				// an error occurred, log it
 //				log.Println("[ERROR]: ", resp.Error.Error())
 //				continue
 //			}

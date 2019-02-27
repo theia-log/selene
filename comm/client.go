@@ -43,7 +43,7 @@ type EventResponse struct {
 	// The event received from the server. In case of error it may be nil.
 	Event *model.Event
 
-	// The error that ocurred.
+	// The error that occurred.
 	// If the read was successful, this will be set to nil.
 	Error error
 }

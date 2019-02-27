@@ -1,4 +1,4 @@
-// Package watcher defines a watcher daemon that handles events from diffrent
+// Package watcher defines a watcher daemon that handles events from different
 // event sources.
 // This package defines the interfaces for the WatcherDaemon and EventSource.
 // Implementations for file-based event sources and watcher based on inotify
