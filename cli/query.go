@@ -8,6 +8,9 @@ import (
 	"github.com/theia-log/selene/comm"
 )
 
+// QueryCommand implements the 'query' subcommand.
+// Takes a list of arguments to the query subcommand, parses it and then calls
+// RunQuery with the parsed query flags.
 func QueryCommand(args []string) error {
 	queryFlags, flags := SetupQueryFlags()
 	if err := flags.Parse(args); err != nil {
@@ -16,6 +19,7 @@ func QueryCommand(args []string) error {
 	return RunQuery(queryFlags)
 }
 
+// RunQuery runs a query against the server with the given query flags.
 func RunQuery(flags *QueryFlags) error {
 	serverURL, err := flags.GetServerURL()
 	if err != nil {
@@ -66,6 +70,8 @@ func RunQuery(flags *QueryFlags) error {
 	return nil
 }
 
+// toQueryFilter transforms the QueryFlags to an EventFilter ready to be passed
+// down to the theia client.
 func toQueryFilter(flags *QueryFlags) (*comm.EventFilter, error) {
 	order := valueOrNil(flags.Order)
 	if order != nil && *order != "asc" && *order != "desc" {
@@ -89,6 +95,8 @@ func toQueryFilter(flags *QueryFlags) (*comm.EventFilter, error) {
 	return filter, nil
 }
 
+// valueOrNil returns nil if the passed pointer is nil or points to an empty
+// string (""). Otherwise returns the original string.
 func valueOrNil(str *string) *string {
 	if str == nil {
 		return nil

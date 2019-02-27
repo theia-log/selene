@@ -14,6 +14,11 @@ import (
 	"github.com/theia-log/selene/watcher"
 )
 
+// RunWatcher runs a watcher with the given watcher flags.
+// It creates a WatcherDaemon and attaches the file, given as an input flag, as
+// an EventSource.
+// A connection to theia '/event' endpoint is created and the source events are
+// pushed to the server.
 func RunWatcher(args *WatcherFlags) error {
 	daemon := watcher.NewWatchDaemon()
 
@@ -69,6 +74,9 @@ func RunWatcher(args *WatcherFlags) error {
 	return nil
 }
 
+// WatcherCommand implements the 'watch' subcommand.
+// Takes a list of arguments to the watch subcommand, parses it and then calls
+// RunWatcher with the parsed watcher flags.
 func WatcherCommand(args []string) error {
 	watcherFlags, flagSet := SetupWatcherFlags()
 	err := flagSet.Parse(args)
