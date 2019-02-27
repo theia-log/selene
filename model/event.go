@@ -162,6 +162,7 @@ func parsePreamble(event *bufio.Reader) (preamble, total, header, content int64,
 	return
 }
 
+// NewEventID generates new Event ID. The value is a random UUID (v4).
 func NewEventID() string {
 	return uuid.Must(uuid.NewV4()).String()
 }
