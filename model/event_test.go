@@ -93,3 +93,55 @@ func TestLoadBytes(t *testing.T) {
 		}
 	}
 }
+
+// TestDump tests dumping of an event as string.
+func TestDump(t *testing.T) {
+	expected := strings.Join([]string{
+		"event:153 131 22",
+		"id:331c531d-6eb4-4fb5-84d3-ea6937b01fdd",
+		"timestamp:1509989630.674905",
+		"source:/dev/sensors/door1-sensor",
+		"tags:sensors,home,doors,door1",
+		"Door has been unlocked",
+	}, "\n")
+	ev := &Event{
+		ID:        "331c531d-6eb4-4fb5-84d3-ea6937b01fdd",
+		Source:    "/dev/sensors/door1-sensor",
+		Timestamp: 1509989630.6749051,
+		Tags:      []string{"sensors", "home", "doors", "door1"},
+		Content:   "Door has been unlocked",
+	}
+	data, err := ev.Dump()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if data != expected {
+		t.Fatalf("Event not dumped properly.\nExpected:\n>\n%s\n>\nBut instead got:\n<\n%s\n<\n", expected, data)
+	}
+}
+
+// TestDumpBytes tests dumping of event as a slice of bytes.
+func TestDumpBytes(t *testing.T) {
+	expected := strings.Join([]string{
+		"event:153 131 22",
+		"id:331c531d-6eb4-4fb5-84d3-ea6937b01fdd",
+		"timestamp:1509989630.674905",
+		"source:/dev/sensors/door1-sensor",
+		"tags:sensors,home,doors,door1",
+		"Door has been unlocked",
+	}, "\n")
+	ev := &Event{
+		ID:        "331c531d-6eb4-4fb5-84d3-ea6937b01fdd",
+		Source:    "/dev/sensors/door1-sensor",
+		Timestamp: 1509989630.6749051,
+		Tags:      []string{"sensors", "home", "doors", "door1"},
+		Content:   "Door has been unlocked",
+	}
+	data, err := ev.DumpBytes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != expected {
+		t.Fatalf("Event not dumped properly.\nExpected:\n>\n%s\n>\nBut instead got:\n<\n%s\n<\n", expected, string(data))
+	}
+}
