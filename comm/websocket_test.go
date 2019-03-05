@@ -13,12 +13,15 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// Message is a websocket message represented as an array of bytes.
 type Message []byte
 
+// EqualsTo check if this message is equal to another message data.
 func (m Message) EqualsTo(message []byte) bool {
 	return string(m) == string(message)
 }
 
+// websocketMock implements a mock specification for websocket server.
 type websocketMock struct {
 	expect   Message
 	respond  []Message
@@ -28,16 +31,21 @@ type websocketMock struct {
 	done     chan bool
 }
 
+// Expect expect to receive a message with the given value.
 func (w *websocketMock) Expect(mesage string) *websocketMock {
 	w.expect = []byte(mesage)
 	return w
 }
 
+// Respond responds to the client websocket with the given message after the
+// first message has been received.
 func (w *websocketMock) Respond(message string) *websocketMock {
 	w.respond = append(w.respond, []byte(message))
 	return w
 }
 
+// AddError adds an error to the mock object. The errors are kept sequentially
+// as they are added.
 func (w *websocketMock) AddError(err error) *websocketMock {
 	if w.Errors == nil {
 		w.Errors = []error{}
@@ -50,12 +58,19 @@ func (w *websocketMock) markRequestCompleted() {
 	w.done <- true
 }
 
+// WaitRequestsToComplete can be called to wait until the whole handling of
+// incoming and outgoing messages has been completed. You must specify the
+// number of messages to be handled before the execution can continue and this
+// method returns control.
 func (w *websocketMock) WaitRequestsToComplete(n int) {
 	for ; n > 0; n-- {
 		<-w.done
 	}
 }
 
+// upgradedHandler handles the receiving and responding to websocket messages
+// using httptest package structures and Gorilla/websocket upgrader for the
+// standard HTTP test server.
 func (w *websocketMock) upgradedHandler(resp http.ResponseWriter, req *http.Request) {
 	conn, err := w.upgrader.Upgrade(resp, req, nil)
 	if err != nil {
@@ -89,6 +104,7 @@ func (w *websocketMock) upgradedHandler(resp http.ResponseWriter, req *http.Requ
 	w.markRequestCompleted()
 }
 
+// NewWebsocketMock constructs a new websocket mock to be used when testing.
 func NewWebsocketMock() *websocketMock {
 	mock := &websocketMock{
 		upgrader: websocket.Upgrader{
@@ -107,6 +123,8 @@ func NewWebsocketMock() *websocketMock {
 	return mock
 }
 
+// TestWebsocketClientSend tests vanilla case of sending an Event via the
+// WebsocketClient API.
 func TestWebsocketClientSend(t *testing.T) {
 	mock := NewWebsocketMock().Expect(strings.Join([]string{
 		"event:71 65 6",
