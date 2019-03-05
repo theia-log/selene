@@ -115,9 +115,9 @@ func (t *theiaConn) Close(reason string) error {
 
 // newConn creates new raw theia connection to a given server and for a
 // particular action.
-func newConn(baseUrl, action string) *theiaConn {
+func newConn(baseURL, action string) *theiaConn {
 	return &theiaConn{
-		url: fmt.Sprintf("%s/%s", baseUrl, action),
+		url: fmt.Sprintf("%s/%s", baseURL, action),
 	}
 }
 
