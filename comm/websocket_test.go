@@ -202,3 +202,50 @@ func TestWebsocketClientReceive(t *testing.T) {
 		t.Fatal("Event not parsed properly")
 	}
 }
+
+func TestWebsocketClientFind(t *testing.T) {
+	mock := NewWebsocketMock().
+		Expect("{\"start\":10}").
+		Respond("ok").
+		Respond(strings.Join([]string{
+			"event:71 65 6",
+			"id:id-001",
+			"timestamp:1551733035.230000",
+			"source:/src",
+			"tags:tag1,tag2",
+			"event1",
+		}, "\n"))
+
+	client := NewWebsocketClient(mock.MockURL)
+
+	resp, err := client.Find(&EventFilter{
+		Start: 10.0,
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mock.WaitRequestsToComplete(1)
+
+	if mock.Errors != nil {
+		for _, err := range mock.Errors {
+			t.Log(err)
+		}
+		t.Fail()
+		return
+	}
+
+	event := <-resp
+	if event.Error != nil {
+		t.Fatal(event.Error)
+	}
+
+	if event.Event == nil {
+		t.Fatal("Expected to get a parsed event.")
+	}
+
+	if event.Event.ID != "id-001" {
+		t.Fatal("Event not parsed properly")
+	}
+}

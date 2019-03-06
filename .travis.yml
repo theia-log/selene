@@ -5,9 +5,16 @@ go:
 before_install:
   - wget "https://github.com/golang/dep/releases/download/v0.5.0/dep-linux-amd64" -O $GOPATH/bin/dep
   - chmod +x $GOPATH/bin/dep
+  
 
 install:
   - dep ensure
+  - go get github.com/axw/gocov/gocov
+
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
 
 script:
-  - go test ./...
+  - gocov test ./... | gocov-xml > coverage.xml && ./cc-test-reporter format-coverage -t cobertura -o coverage.json coverage.xml
+  - ./cc-test-reporter upload-coverage -i coverage.json
