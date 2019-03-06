@@ -85,9 +85,16 @@ func toQueryFilter(flags *QueryFlags) (*comm.EventFilter, error) {
 	if flags.End != nil && *flags.End != 0 {
 		end = flags.End
 	}
+
+	var filterOrder *comm.EventOrder
+	if order != nil {
+		ord := comm.EventOrder(*order)
+		filterOrder = &ord
+	}
+
 	filter := &comm.EventFilter{
 		Content: valueOrNil(flags.Content),
-		Order:   order,
+		Order:   filterOrder,
 		Tags:    flags.Tags,
 		Start:   start,
 		End:     end,

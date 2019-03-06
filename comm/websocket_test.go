@@ -21,8 +21,8 @@ func (m Message) EqualsTo(message []byte) bool {
 	return string(m) == string(message)
 }
 
-// websocketMock implements a mock specification for websocket server.
-type websocketMock struct {
+// WebsocketMock implements a mock specification for websocket server.
+type WebsocketMock struct {
 	expect   Message
 	respond  []Message
 	MockURL  string
@@ -32,21 +32,21 @@ type websocketMock struct {
 }
 
 // Expect expect to receive a message with the given value.
-func (w *websocketMock) Expect(mesage string) *websocketMock {
+func (w *WebsocketMock) Expect(mesage string) *WebsocketMock {
 	w.expect = []byte(mesage)
 	return w
 }
 
 // Respond responds to the client websocket with the given message after the
 // first message has been received.
-func (w *websocketMock) Respond(message string) *websocketMock {
+func (w *WebsocketMock) Respond(message string) *WebsocketMock {
 	w.respond = append(w.respond, []byte(message))
 	return w
 }
 
 // AddError adds an error to the mock object. The errors are kept sequentially
 // as they are added.
-func (w *websocketMock) AddError(err error) *websocketMock {
+func (w *WebsocketMock) AddError(err error) *WebsocketMock {
 	if w.Errors == nil {
 		w.Errors = []error{}
 	}
@@ -54,7 +54,7 @@ func (w *websocketMock) AddError(err error) *websocketMock {
 	return w
 }
 
-func (w *websocketMock) markRequestCompleted() {
+func (w *WebsocketMock) markRequestCompleted() {
 	w.done <- true
 }
 
@@ -62,7 +62,7 @@ func (w *websocketMock) markRequestCompleted() {
 // incoming and outgoing messages has been completed. You must specify the
 // number of messages to be handled before the execution can continue and this
 // method returns control.
-func (w *websocketMock) WaitRequestsToComplete(n int) {
+func (w *WebsocketMock) WaitRequestsToComplete(n int) {
 	for ; n > 0; n-- {
 		<-w.done
 	}
@@ -71,7 +71,7 @@ func (w *websocketMock) WaitRequestsToComplete(n int) {
 // upgradedHandler handles the receiving and responding to websocket messages
 // using httptest package structures and Gorilla/websocket upgrader for the
 // standard HTTP test server.
-func (w *websocketMock) upgradedHandler(resp http.ResponseWriter, req *http.Request) {
+func (w *WebsocketMock) upgradedHandler(resp http.ResponseWriter, req *http.Request) {
 	conn, err := w.upgrader.Upgrade(resp, req, nil)
 	if err != nil {
 		http.Error(resp, fmt.Sprintf("cannot upgrade: %v", err), http.StatusInternalServerError)
@@ -105,8 +105,8 @@ func (w *websocketMock) upgradedHandler(resp http.ResponseWriter, req *http.Requ
 }
 
 // NewWebsocketMock constructs a new websocket mock to be used when testing.
-func NewWebsocketMock() *websocketMock {
-	mock := &websocketMock{
+func NewWebsocketMock() *WebsocketMock {
+	mock := &WebsocketMock{
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  1024,
 			WriteBufferSize: 1024,
@@ -171,9 +171,7 @@ func TestWebsocketClientReceive(t *testing.T) {
 
 	client := NewWebsocketClient(mock.MockURL)
 
-	resp, err := client.Receive(&EventFilter{
-		Start: 10.0,
-	})
+	resp, err := client.Receive(Filter(10.0))
 
 	if err != nil {
 		t.Fatal(err)
@@ -205,7 +203,7 @@ func TestWebsocketClientReceive(t *testing.T) {
 
 func TestWebsocketClientFind(t *testing.T) {
 	mock := NewWebsocketMock().
-		Expect("{\"start\":10}").
+		Expect("{\"start\":10,\"content\":\"event1\"}").
 		Respond("ok").
 		Respond(strings.Join([]string{
 			"event:71 65 6",
@@ -218,9 +216,7 @@ func TestWebsocketClientFind(t *testing.T) {
 
 	client := NewWebsocketClient(mock.MockURL)
 
-	resp, err := client.Find(&EventFilter{
-		Start: 10.0,
-	})
+	resp, err := client.Find(Filter(10.0).MatchContent("event1"))
 
 	if err != nil {
 		t.Fatal(err)

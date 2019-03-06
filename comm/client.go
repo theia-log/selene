@@ -6,6 +6,16 @@ import (
 	"github.com/theia-log/selene/model"
 )
 
+// EventOrder is the order in which the events should be returned. Can be either
+// 'asc' - ascending, or 'desc' - descending.
+type EventOrder string
+
+// OrderAsc sort in ascending order.
+const OrderAsc EventOrder = "asc"
+
+// OrderDesc sort in descending order.
+const OrderDesc EventOrder = "desc"
+
 // EventFilter holds values for filtering events.
 // This structure is used when filtering past events and filering real-time
 // events as well.
@@ -27,7 +37,7 @@ type EventFilter struct {
 	Content *string `json:"content,omitempty"`
 
 	// Order in which to return the events. Makes sense only for past events.
-	Order *string `json:"order,omitempty"`
+	Order *EventOrder `json:"order,omitempty"`
 }
 
 // DumpBytes serializes the event filter values as bytes.
@@ -35,6 +45,51 @@ type EventFilter struct {
 // filter data to JSON, then encodes in UTF-8.
 func (f *EventFilter) DumpBytes() ([]byte, error) {
 	return json.Marshal(f)
+}
+
+// MatchContent sets the matcher for the content of this EventFilter.
+// Returns pointer to this EventFilter.
+func (f *EventFilter) MatchContent(content string) *EventFilter {
+	f.Content = &content
+	return f
+}
+
+// MatchTag adds a matcher to the list of tags matchers of this EventFilter.
+// Returns pointer to this EventFilter.
+func (f *EventFilter) MatchTag(tag ...string) *EventFilter {
+	f.Tags = append(f.Tags, tag...)
+	return f
+}
+
+// MatchEnd sets the end timestamp for this EventFilter. Match events that
+// happened before this time.
+// Returns pointer to this EventFilter.
+func (f *EventFilter) MatchEnd(end float64) *EventFilter {
+	f.End = &end
+	return f
+}
+
+// OrderAsc set the filter order to ascending.
+// Returns pointer to this EventFilter.
+func (f *EventFilter) OrderAsc() *EventFilter {
+	order := OrderAsc
+	f.Order = &order
+	return f
+}
+
+// OrderDesc sets the filter order to descending.
+// Returns pointer to this EventFilter.
+func (f *EventFilter) OrderDesc() *EventFilter {
+	order := OrderDesc
+	f.Order = &order
+	return f
+}
+
+// Filter creates new EventFilter with start timestamp.
+func Filter(start float64) *EventFilter {
+	return &EventFilter{
+		Start: start,
+	}
 }
 
 // EventResponse holds an Event or an Error.
