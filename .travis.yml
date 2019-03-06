@@ -10,6 +10,7 @@ before_install:
 install:
   - dep ensure
   - go get github.com/axw/gocov/gocov
+  - go get github.com/AlekSi/gocov-xml
 
 before_script:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
@@ -17,6 +18,4 @@ before_script:
 
 script:
   - gocov test ./... | gocov-xml > coverage.xml && ./cc-test-reporter format-coverage -t cobertura -o coverage.json coverage.xml
-  - pwd
-  - ls
   - ./cc-test-reporter upload-coverage -i coverage.json
