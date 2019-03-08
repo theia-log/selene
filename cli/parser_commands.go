@@ -94,10 +94,12 @@ func (c *CommandsCLI) getCommandNames() []string {
 }
 
 func (c *CommandsCLI) printHelpTo(out io.Writer) {
-	fmt.Fprintf(out, "Usage: %s %s [ARGS]\n\n%s\n\n", c.prog, strings.Join(c.getCommandNames(), "|"), c.description)
-	fmt.Fprintf(out, "Commands:\n")
-	for command, descriptor := range c.commands {
-		fmt.Fprintf(out, "\t%s - %s\n", command, descriptor.help)
+	fmt.Fprintf(out, "Usage: %s %s [ARGS]\n\n%s\n", c.prog, strings.Join(c.getCommandNames(), "|"), c.description)
+	if c.commands != nil && len(c.commands) > 0 {
+		fmt.Fprintf(out, "\nCommands:\n")
+		for command, descriptor := range c.commands {
+			fmt.Fprintf(out, "\t%s - %s\n", command, descriptor.help)
+		}
 	}
 }
 
