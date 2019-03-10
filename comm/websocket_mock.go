@@ -25,6 +25,7 @@ type WebsocketMock struct {
 	upgrader websocket.Upgrader
 	Errors   []error
 	done     chan bool
+	conn     *websocket.Conn
 }
 
 // Expect expect to receive a message with the given value.
@@ -59,6 +60,9 @@ func (w *WebsocketMock) markRequestCompleted() {
 // number of messages to be handled before the execution can continue and this
 // method returns control.
 func (w *WebsocketMock) WaitRequestsToComplete(n int) {
+	if w.Errors != nil || len(w.Errors) > 0 {
+		return
+	}
 	for ; n > 0; n-- {
 		<-w.done
 	}
@@ -74,6 +78,7 @@ func (w *WebsocketMock) upgradedHandler(resp http.ResponseWriter, req *http.Requ
 		w.markRequestCompleted()
 		return
 	}
+	w.conn = conn
 	mt, p, err := conn.ReadMessage()
 	if err != nil {
 		w.AddError(err)
@@ -87,7 +92,6 @@ func (w *WebsocketMock) upgradedHandler(resp http.ResponseWriter, req *http.Requ
 			return
 		}
 	}
-
 	if w.respond != nil {
 		for _, msg := range w.respond {
 			if err = conn.WriteMessage(mt, msg); err != nil {
@@ -98,6 +102,14 @@ func (w *WebsocketMock) upgradedHandler(resp http.ResponseWriter, req *http.Requ
 		}
 	}
 	w.markRequestCompleted()
+}
+
+// Terminate terminates and closes the server connection.
+func (w *WebsocketMock) Terminate() error {
+	if w.conn != nil {
+		return w.conn.Close()
+	}
+	return fmt.Errorf("no connection")
 }
 
 // NewWebsocketMock constructs a new websocket mock to be used when testing.

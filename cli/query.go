@@ -56,7 +56,6 @@ func RunQuery(flags *QueryFlags) error {
 				fmt.Fprintln(os.Stderr, event.Error.Error())
 				continue
 			}
-			// TODO: Format and print event
 			ev := event.Event
 			tags := ""
 			if ev.Tags != nil {
