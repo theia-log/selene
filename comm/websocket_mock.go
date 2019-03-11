@@ -12,6 +12,9 @@ import (
 // Message is a websocket message represented as an array of bytes.
 type Message []byte
 
+// OnMessageHandler gets called when a message is received.
+type OnMessageHandler func([]byte) error
+
 // EqualsTo check if this message is equal to another message data.
 func (m Message) EqualsTo(message []byte) bool {
 	return string(m) == string(message)
@@ -19,13 +22,14 @@ func (m Message) EqualsTo(message []byte) bool {
 
 // WebsocketMock implements a mock specification for websocket server.
 type WebsocketMock struct {
-	expect   Message
-	respond  []Message
-	MockURL  string
-	upgrader websocket.Upgrader
-	Errors   []error
-	done     chan bool
-	conn     *websocket.Conn
+	expect         Message
+	requestHandler OnMessageHandler
+	respond        []Message
+	MockURL        string
+	upgrader       websocket.Upgrader
+	Errors         []error
+	done           chan bool
+	conn           *websocket.Conn
 }
 
 // Expect expect to receive a message with the given value.
@@ -92,6 +96,13 @@ func (w *WebsocketMock) upgradedHandler(resp http.ResponseWriter, req *http.Requ
 			return
 		}
 	}
+	if w.requestHandler != nil {
+		if err = w.requestHandler(p); err != nil {
+			w.AddError(err)
+			w.markRequestCompleted()
+			return
+		}
+	}
 	if w.respond != nil {
 		for _, msg := range w.respond {
 			if err = conn.WriteMessage(mt, msg); err != nil {
@@ -102,6 +113,12 @@ func (w *WebsocketMock) upgradedHandler(resp http.ResponseWriter, req *http.Requ
 		}
 	}
 	w.markRequestCompleted()
+}
+
+// HandleReceivedMessage add handler for received messages.
+func (w *WebsocketMock) HandleReceivedMessage(handler OnMessageHandler) *WebsocketMock {
+	w.requestHandler = handler
+	return w
 }
 
 // Terminate terminates and closes the server connection.

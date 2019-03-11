@@ -230,7 +230,7 @@ func (w *WebsocketClient) Receive(filter *EventFilter) (chan *EventResponse, err
 }
 
 // Find looks up past events that match the given EventFilter.
-func (w WebsocketClient) Find(filter *EventFilter) (chan *EventResponse, error) {
+func (w *WebsocketClient) Find(filter *EventFilter) (chan *EventResponse, error) {
 	return w.doReceive("find", filter)
 }
 

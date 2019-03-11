@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	uuid "github.com/satori/go.uuid"
@@ -61,10 +62,12 @@ func RunWatcher(args *WatcherFlags) error {
 
 	done := make(chan bool)
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, os.Interrupt, syscall.SIGHUP)
 	go func() {
 		for range c {
-			// TODO: Stop client here
+			if err := daemon.Stop(); err != nil {
+				log.Println("Failed to stop watch daemon: ", err.Error())
+			}
 			done <- true
 		}
 	}()
