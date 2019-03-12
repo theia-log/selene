@@ -19,6 +19,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:be40f095cd741773905744f16c1f7a21fd9226ccd0529f019deb7da6d667f71c"
+  name = "github.com/logrusorgru/aurora"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "a7b3b318ed4e1ae5b80602b08627267303c68572"
+
+[[projects]]
+  branch = "master"
   digest = "1:a3b8912deeef29007fab9a13a9f21b9e9b59c621a2ed61e2fe7b37320a71fbd5"
   name = "github.com/satori/go.uuid"
   packages = ["."]
@@ -39,6 +47,7 @@
   input-imports = [
     "github.com/fsnotify/fsnotify",
     "github.com/gorilla/websocket",
+    "github.com/logrusorgru/aurora",
     "github.com/satori/go.uuid",
   ]
   solver-name = "gps-cdcl"
