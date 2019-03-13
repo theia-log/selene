@@ -10,6 +10,9 @@ import (
 	"github.com/logrusorgru/aurora"
 )
 
+// TagColors generates the names of the colors used for tags.
+// The names are not actual color names (like green, blue) but are labels
+// used to lookup the colors in the current palette.
 func TagColors() []string {
 	colors := []string{}
 	for i := 0; i < 16; i++ {
@@ -18,6 +21,8 @@ func TagColors() []string {
 	return colors
 }
 
+// RandTagColors generates the names of the colors used for tags, but in random
+// order.
 func RandTagColors() []string {
 	shuffled := []string{}
 	colors := TagColors()
@@ -30,10 +35,16 @@ func RandTagColors() []string {
 	return shuffled
 }
 
+// TextTypeHeuristic is a function that checks if the given text matches some
+// heuristic. Returns true if the texts matches the conditions in the underlying
+// heuristic check.
 type TextTypeHeuristic func(text string) bool
 
+// TypeHeuristics contains map of heuristics by name.
 type TypeHeuristics map[string]TextTypeHeuristic
 
+// Detect tries to detect the category in which the text belongs to.
+// It checks against all registered heuristics.
 func (h TypeHeuristics) Detect(text string) string {
 	for typeName, heuristic := range h {
 		if heuristic(text) {
@@ -43,7 +54,10 @@ func (h TypeHeuristics) Detect(text string) string {
 	return ""
 }
 
-var KnownTypes TypeHeuristics = TypeHeuristics{
+// KnownTypes defines base text types like: error, warning, success etc.
+// A given text will be checked if the text content is an error, warning
+// or other registered type of text.
+var KnownTypes = TypeHeuristics{
 	"error": func(text string) bool {
 		text = strings.TrimSpace(strings.ToLower(text))
 		match, err := regexp.MatchString("\\[?err?(or)?\\]?", text)
@@ -78,6 +92,7 @@ var KnownTypes TypeHeuristics = TypeHeuristics{
 	},
 }
 
+// AuroraColors implements the Color interface using the aurora library.
 type AuroraColors struct {
 	aur             aurora.Aurora
 	knownTags       map[string]string
@@ -85,6 +100,8 @@ type AuroraColors struct {
 	palette         map[string]aurora.Color
 }
 
+// ColoredText would color a text based on the "color" field in the context.
+// If set, the color would be resolved from the underlying palette.
 func (a *AuroraColors) ColoredText(ctx Context, text string) string {
 	colorName := ctx.GetString("color")
 	if colorName == "" {
@@ -99,6 +116,12 @@ func (a *AuroraColors) ColoredText(ctx Context, text string) string {
 	return a.aur.Colorize(text, color).String()
 }
 
+// ColoredTag returns a colored text for the given tag.
+// Same tags have the same colors, and different tags would get different
+// colors. However, if the number of total tags is larger than the max number
+// of colors reproducible on the terminal, some of the tags may receive same
+// colors.
+// The colors of the tags are random.
 func (a *AuroraColors) ColoredTag(ctx Context, tag string) string {
 	knownType := KnownTypes.Detect(tag)
 	if knownType != "" {
@@ -116,6 +139,7 @@ func (a *AuroraColors) ColoredTag(ctx Context, tag string) string {
 	return a.ColoredText(ctx, tag)
 }
 
+// ColoredContent colors a content text.
 func (a *AuroraColors) ColoredContent(ctx Context, content string) string {
 	if knownType := KnownTypes.Detect(content); knownType != "" {
 		ctx["color"] = knownType
@@ -169,6 +193,7 @@ var defaultPalette map[string]aurora.Color = map[string]aurora.Color{
 	"grey":    aurora.GrayFg,
 }
 
+// NewAuroraColors builds new Colors.
 func NewAuroraColors() Colors {
 	return &AuroraColors{
 		aur:             aurora.NewAurora(true),
