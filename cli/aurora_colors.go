@@ -52,6 +52,30 @@ var KnownTypes TypeHeuristics = TypeHeuristics{
 		}
 		return match
 	},
+	"warning": func(text string) bool {
+		text = strings.TrimSpace(strings.ToLower(text))
+		match, err := regexp.MatchString("\\[?warn(ing)?\\]?", text)
+		if err != nil {
+			panic(err)
+		}
+		return match
+	},
+	"success": func(text string) bool {
+		text = strings.TrimSpace(strings.ToLower(text))
+		match, err := regexp.MatchString("\\[?success\\]?", text)
+		if err != nil {
+			panic(err)
+		}
+		return match
+	},
+	"info": func(text string) bool {
+		text = strings.TrimSpace(strings.ToLower(text))
+		match, err := regexp.MatchString("\\[?info\\]?", text)
+		if err != nil {
+			panic(err)
+		}
+		return match
+	},
 }
 
 type AuroraColors struct {
@@ -92,6 +116,13 @@ func (a *AuroraColors) ColoredTag(ctx Context, tag string) string {
 	return a.ColoredText(ctx, tag)
 }
 
+func (a *AuroraColors) ColoredContent(ctx Context, content string) string {
+	if knownType := KnownTypes.Detect(content); knownType != "" {
+		ctx["color"] = knownType
+	}
+	return a.ColoredText(ctx, content)
+}
+
 func (a *AuroraColors) newTagColor() string {
 	if len(a.availableColors) == 0 {
 		a.availableColors = RandTagColors()
@@ -99,4 +130,50 @@ func (a *AuroraColors) newTagColor() string {
 	color := a.availableColors[0]
 	a.availableColors = a.availableColors[1:]
 	return color
+}
+
+var defaultPalette map[string]aurora.Color = map[string]aurora.Color{
+	// tags
+	"tag-1":  aurora.BrownBg,
+	"tag-2":  aurora.RedBg,
+	"tag-3":  aurora.GreenBg,
+	"tag-4":  aurora.GrayBg | aurora.CyanFg,
+	"tag-5":  aurora.BlueBg,
+	"tag-6":  aurora.MagentaBg,
+	"tag-7":  aurora.CyanBg,
+	"tag-8":  aurora.BrownBg | aurora.RedFg | aurora.BoldFm,
+	"tag-9":  aurora.RedBg | aurora.BrownFg | aurora.BoldFm,
+	"tag-10": aurora.GreenBg | aurora.GrayFg | aurora.BoldFm,
+	"tag-11": aurora.GrayBg | aurora.BlackFg | aurora.BoldFm,
+	"tag-12": aurora.BlueBg | aurora.BrownFg | aurora.BoldFm,
+	"tag-13": aurora.MagentaBg | aurora.BlueFg | aurora.BoldFm,
+	"tag-14": aurora.CyanBg | aurora.RedFg | aurora.BoldFm,
+	"tag-15": aurora.GreenFg | aurora.BoldFm,
+	"tag-16": aurora.RedFg | aurora.BoldFm,
+	// base color labels
+	"error":     aurora.RedFg | aurora.BoldFm,
+	"warn":      aurora.BrownFg,
+	"alert":     aurora.RedFg,
+	"info":      aurora.CyanFg,
+	"primary":   aurora.BlackBg | aurora.BlueFg,
+	"secondary": aurora.BlackBg | aurora.GrayFg,
+	"success":   aurora.GreenFg,
+	// color names
+	"black":   aurora.BlackFg,
+	"red":     aurora.RedFg,
+	"green":   aurora.GreenFg,
+	"brown":   aurora.BrownFg,
+	"blue":    aurora.BlueFg,
+	"magenta": aurora.MagentaFg,
+	"cyan":    aurora.CyanFg,
+	"grey":    aurora.GrayFg,
+}
+
+func NewAuroraColors() Colors {
+	return &AuroraColors{
+		aur:             aurora.NewAurora(true),
+		availableColors: RandTagColors(),
+		knownTags:       map[string]string{},
+		palette:         defaultPalette,
+	}
 }

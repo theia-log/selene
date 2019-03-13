@@ -3,6 +3,9 @@ package cli
 import (
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/theia-log/selene/model"
 
 	"github.com/theia-log/selene/comm"
 )
@@ -41,4 +44,18 @@ func TestQueryCommand(t *testing.T) {
 		t.Fatal(err)
 	}
 	<-done
+}
+
+func TestPrintEvent(t *testing.T) {
+	colors := NewAuroraColors()
+	ev := &model.Event{
+		ID:        "684b84e9-14aa-4267-828a-55ea371c0508",
+		Timestamp: float64(time.Now().UnixNano()) / float64(time.Millisecond),
+		Source:    "/tmp/source",
+		Tags:      []string{"tag1", "tag2", "error", "info", "add"},
+		Content:   "This is the content.",
+	}
+
+	PrintEvent(ev, DefaultEventFormat, colors)
+
 }

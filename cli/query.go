@@ -2,8 +2,11 @@ package cli
 
 import (
 	"fmt"
+	"html/template"
 	"os"
 	"strings"
+
+	"github.com/theia-log/selene/model"
 
 	"github.com/theia-log/selene/comm"
 )
@@ -31,6 +34,7 @@ func RunQuery(flags *QueryFlags) error {
 		return err
 	}
 
+	colors := NewAuroraColors()
 	var resp chan *comm.EventResponse
 
 	if flags.Live != nil && *flags.Live {
@@ -57,11 +61,7 @@ func RunQuery(flags *QueryFlags) error {
 				continue
 			}
 			ev := event.Event
-			tags := ""
-			if ev.Tags != nil {
-				tags = strings.Join(ev.Tags, ",")
-			}
-			fmt.Printf("%s[%f](%s)%s: %s\n", ev.ID, ev.Timestamp, tags, ev.Source, ev.Content)
+			PrintEvent(ev, DefaultEventFormat, colors)
 		}
 	}()
 
@@ -111,4 +111,44 @@ func valueOrNil(str *string) *string {
 		return nil
 	}
 	return str
+}
+
+type templateEvent struct {
+	ID        string
+	IDShort   string
+	Timestamp string
+	Tags      string
+	Source    string
+	Content   string
+}
+
+var FullEventFormat string = "{{ .ID }}:[{{ .Timestamp }}]({{ .Source }}) {{ .Tags }} - {{ .Content }}"
+var ShortEventFormat string = "[{{ .Source }}]{{ .Tags }} - {{ .Content }}"
+var DefaultEventFormat string = "{{ .IDShort }}:[{{ .Timestamp }}]({{ .Source }}) {{ .Tags }} - {{ .Content }}"
+
+func PrintEvent(event *model.Event, format string, colors Colors) {
+	te := &templateEvent{
+		ID:        colors.ColoredText(Context{"color": "secondary"}, event.ID),
+		IDShort:   colors.ColoredText(Context{"color": "secondary"}, fmt.Sprintf("%s", event.ID[0:7])),
+		Content:   colors.ColoredContent(Context{}, event.Content),
+		Source:    colors.ColoredText(Context{"color": "secondary"}, event.Source),
+		Timestamp: colors.ColoredText(Context{"color": "info"}, fmt.Sprintf("%f", event.Timestamp)),
+	}
+
+	tags := []string{}
+	if event.Tags != nil {
+		for _, tag := range event.Tags {
+			tags = append(tags, colors.ColoredTag(Context{}, tag))
+		}
+	}
+	te.Tags = strings.Join(tags, " ")
+
+	tpl, err := template.New("event").Parse(format)
+	if err != nil {
+		panic(err)
+	}
+
+	if err = tpl.Execute(os.Stdout, te); err != nil {
+		panic(err)
+	}
 }
