@@ -1,20 +1,33 @@
 package cli
 
 import (
+	"fmt"
+	"math/rand"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/logrusorgru/aurora"
 )
 
-var TagsColors []aurora.Color = []aurora.Color{
-	aurora.RedBg,
-	aurora.GreenBg,
-	aurora.BrownBg,
-	aurora.BlueBg,
-	aurora.MagentaBg,
-	aurora.CyanBg,
-	aurora.GrayBg,
+func TagColors() []string {
+	colors := []string{}
+	for i := 0; i < 16; i++ {
+		colors = append(colors, fmt.Sprintf("tag-%d", i+1))
+	}
+	return colors
+}
+
+func RandTagColors() []string {
+	shuffled := []string{}
+	colors := TagColors()
+	idxs := rand.New(rand.NewSource(time.Now().Unix())).Perm(len(colors))
+
+	for _, i := range idxs {
+		shuffled = append(shuffled, colors[i])
+	}
+
+	return shuffled
 }
 
 type TextTypeHeuristic func(text string) bool
@@ -44,7 +57,7 @@ var KnownTypes TypeHeuristics = TypeHeuristics{
 type AuroraColors struct {
 	aur             aurora.Aurora
 	knownTags       map[string]string
-	availableColors []aurora.Color
+	availableColors []string
 	palette         map[string]aurora.Color
 }
 
@@ -66,6 +79,24 @@ func (a *AuroraColors) ColoredTag(ctx Context, tag string) string {
 	knownType := KnownTypes.Detect(tag)
 	if knownType != "" {
 		ctx["color"] = knownType
+	} else {
+		tag = strings.ToLower(tag)
+		if knownColor, ok := a.knownTags[tag]; ok {
+			ctx["color"] = knownColor
+		} else {
+			color := a.newTagColor()
+			a.knownTags[tag] = color
+			ctx["color"] = color
+		}
 	}
-	return ""
+	return a.ColoredText(ctx, tag)
+}
+
+func (a *AuroraColors) newTagColor() string {
+	if len(a.availableColors) == 0 {
+		a.availableColors = RandTagColors()
+	}
+	color := a.availableColors[0]
+	a.availableColors = a.availableColors[1:]
+	return color
 }
