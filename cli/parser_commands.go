@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -90,6 +91,7 @@ func (c *CommandsCLI) getCommandNames() []string {
 	for command := range c.commands {
 		commands = append(commands, command)
 	}
+	sort.Slice(commands, func(i, j int) bool { return commands[i] < commands[j] })
 	return commands
 }
 
