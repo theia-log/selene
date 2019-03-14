@@ -56,6 +56,17 @@ type QueryFlags struct {
 	Live *bool
 }
 
+type EventFlags struct {
+	ID           *string
+	Source       *string
+	Time         *string
+	Tags         StringNVar
+	Content      *string
+	Separator    *string
+	EofSeparator *string
+	FromStdin    *bool
+}
+
 // WatcherFlags holds the parsed values for the subcommand 'watch'.
 // This struct holds the global flags, and additional flags for the watch
 // command.
@@ -101,6 +112,12 @@ func SetupWatcherFlags() (*WatcherFlags, *flag.FlagSet) {
 	watcherFlags.File = flags.String("f", "", "File to watch for changes")
 	flags.Var(&watcherFlags.Tags, "t", "Tag the event.")
 	return watcherFlags, flags
+}
+
+// SetupEventGeneratorFlags creates a FlagSet for parsing the 'event'
+// subcommand.
+func SetupEventGeneratorFlags() (*EventFlags, *flag.FlagSet) {
+	return nil, nil
 }
 
 // SetupGlobalFlagsOn adds the global flags to an existing FlagSet and returns
