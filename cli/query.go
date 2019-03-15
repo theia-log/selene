@@ -127,10 +127,14 @@ var ShortEventFormat string = "[{{ .Source }}]{{ .Tags }} - {{ .Content }}"
 var DefaultEventFormat string = "{{ .IDShort }}:[{{ .Timestamp }}]({{ .Source }}) {{ .Tags }} - {{ .Content }}"
 
 func PrintEvent(event *model.Event, format string, colors Colors) {
+	content := event.Content
+	if !strings.HasSuffix(content, "\n") {
+		content = content + "\n"
+	}
 	te := &templateEvent{
 		ID:        colors.ColoredText(Context{"color": "secondary"}, event.ID),
 		IDShort:   colors.ColoredText(Context{"color": "secondary"}, fmt.Sprintf("%s", event.ID[0:7])),
-		Content:   colors.ColoredContent(Context{}, event.Content),
+		Content:   colors.ColoredContent(Context{}, content),
 		Source:    colors.ColoredText(Context{"color": "secondary"}, event.Source),
 		Timestamp: colors.ColoredText(Context{"color": "info"}, fmt.Sprintf("%f", event.Timestamp)),
 	}

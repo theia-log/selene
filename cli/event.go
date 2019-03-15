@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"bufio"
+	"os"
 	"strings"
 	"time"
 
@@ -41,10 +43,54 @@ func RunEventGenerator(flags *EventFlags) error {
 }
 
 func sendOneAndExit(template *model.Event, flags *EventFlags, client comm.Client) error {
-	return nil
+	event := newFromTemplate(template)
+	event.Content = ""
+	if flags.Content != nil {
+		event.Content = *flags.Content
+	}
+	return client.Send(event)
 }
 
 func readFromStdinAndSend(template *model.Event, flags *EventFlags, client comm.Client) error {
+	reader := bufio.NewReader(os.Stdin)
+
+	sep := "\n"
+	if flags.Separator != nil && (*flags.Separator) != "" {
+		sep = *flags.Separator
+	}
+
+	for {
+		content, err := reader.ReadString(sep[0])
+		eof := false
+		if err != nil {
+			if err.Error() == "EOF" {
+				eof = true
+			} else {
+				return err
+			}
+		}
+
+		if eof && content == "" {
+			break
+		}
+
+		if flags.EofSeparator != nil && *flags.EofSeparator != "" {
+			if idx := strings.Index(content, *flags.EofSeparator); idx >= 0 {
+				content = content[0:idx]
+				eof = true
+			}
+		}
+
+		event := newFromTemplate(template)
+		event.Content = content
+		if err = client.Send(event); err != nil {
+			return err
+		}
+		if eof {
+			break
+		}
+	}
+
 	return nil
 }
 
