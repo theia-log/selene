@@ -99,7 +99,8 @@ func (c *CommandsCLI) printHelpTo(out io.Writer) {
 	fmt.Fprintf(out, "Usage: %s %s [ARGS]\n\n%s\n", c.prog, strings.Join(c.getCommandNames(), "|"), c.description)
 	if c.commands != nil && len(c.commands) > 0 {
 		fmt.Fprintf(out, "\nCommands:\n")
-		for command, descriptor := range c.commands {
+		for _, command := range c.getCommandNames() {
+			descriptor := c.commands[command]
 			fmt.Fprintf(out, "\t%s - %s\n", command, descriptor.help)
 		}
 	}
