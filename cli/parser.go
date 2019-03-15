@@ -57,6 +57,7 @@ type QueryFlags struct {
 }
 
 type EventFlags struct {
+	*GlobalFlags
 	ID           *string
 	Source       *string
 	Time         *string
@@ -117,7 +118,23 @@ func SetupWatcherFlags() (*WatcherFlags, *flag.FlagSet) {
 // SetupEventGeneratorFlags creates a FlagSet for parsing the 'event'
 // subcommand.
 func SetupEventGeneratorFlags() (*EventFlags, *flag.FlagSet) {
-	return nil, nil
+	flags := flag.NewFlagSet("event", flag.ExitOnError)
+	eventFlags := &EventFlags{
+		GlobalFlags: SetupGlobalFlagsOn(flags),
+		Tags:        StringNVar{},
+	}
+
+	eventFlags.ID = flags.String("id", "", "The event ID. If not provided, a random one will be generated.")
+	eventFlags.Source = flags.String("source", "", "Event source name.")
+	eventFlags.Time = flags.String("time", "", "The time of the event.")
+	eventFlags.Content = flags.String("content", "", "Event content.")
+	eventFlags.EofSeparator = flags.String("eof", "", "EOF separator. Reading shall stop if this pattern is encountered in the STDIN.")
+	eventFlags.Separator = flags.String("sep", "", "Event content separator when reading from STDIN.")
+	eventFlags.FromStdin = flags.Bool("stdin", false, "Read event content from STDIN.")
+
+	flags.Var(&eventFlags.Tags, "tag", "Event tags.")
+
+	return eventFlags, flags
 }
 
 // SetupGlobalFlagsOn adds the global flags to an existing FlagSet and returns
