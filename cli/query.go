@@ -122,10 +122,16 @@ type templateEvent struct {
 	Content   string
 }
 
-var FullEventFormat string = "{{ .ID }}:[{{ .Timestamp }}]({{ .Source }}) {{ .Tags }} - {{ .Content }}"
-var ShortEventFormat string = "[{{ .Source }}]{{ .Tags }} - {{ .Content }}"
-var DefaultEventFormat string = "{{ .IDShort }}:[{{ .Timestamp }}]({{ .Source }}) {{ .Tags }} - {{ .Content }}"
+// FullEventFormat format template for printing an Event - full data.
+var FullEventFormat = "{{ .ID }}:[{{ .Timestamp }}]({{ .Source }}) {{ .Tags }} - {{ .Content }}"
 
+// ShortEventFormat format template to print event content, source and tags - short format.
+var ShortEventFormat = "[{{ .Source }}]{{ .Tags }} - {{ .Content }}"
+
+// DefaultEventFormat default format template for printing an event.
+var DefaultEventFormat = "{{ .IDShort }}:[{{ .Timestamp }}]({{ .Source }}) {{ .Tags }} - {{ .Content }}"
+
+// PrintEvent prints the event using the provided format template to STDOUT.
 func PrintEvent(event *model.Event, format string, colors Colors) {
 	content := event.Content
 	if !strings.HasSuffix(content, "\n") {

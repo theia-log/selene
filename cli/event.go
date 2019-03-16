@@ -2,9 +2,13 @@ package cli
 
 import (
 	"bufio"
+	"fmt"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/theia-log/selene/comm"
 
@@ -132,4 +136,101 @@ func newFromTemplate(template *model.Event) *model.Event {
 	}
 
 	return ev
+}
+
+var rfc3339Pattern = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3}){0,1}((-|\\+)\\d{4}){0,1}$"
+var timestampPattern = "^\\d+(\\.\\d+){0,1}$"
+var manualTimePattern = "^(\\+|-)\\d+(\\w{1,7}){0,1}$"
+
+type timeStringParser func(timeStr string) (float64, error)
+
+func rfc3339Parser(timeStr string) (float64, error) {
+	tm, err := time.Parse("", timeStr)
+	if err != nil {
+		return 0.0, err
+	}
+	return float64(tm.UnixNano()) / float64(time.Millisecond), nil
+}
+
+func timestampParser(timeStr string) (float64, error) {
+	return strconv.ParseFloat(timeStr, 64)
+}
+
+var units = map[string]float64{
+	"ms,millisecond,milliseconds": 1.0,
+	"s,second,seconds":            1000.0,
+	"m,min,minute,minutes":        60 * 1000.0,
+	"h,hr,hrs,hour,hours":         60 * 60 * 1000.0,
+	"d,day,days":                  24 * 60 * 60 * 1000.0,
+	"w,week,weeks":                7 * 24 * 60 * 60 * 1000.0,
+	"mn,mon,month,months":         30 * 24 * 60 * 60 * 1000.0,
+	"y,yr,year,years":             365 * 24 * 60 * 60 * 1000.0,
+}
+
+func manualStringParser(timeStr string) (float64, error) {
+	timeStr = strings.ToLower(timeStr)
+	now := float64(time.Now().UnixNano()) / (float64(time.Millisecond))
+	sign := timeStr[0]
+	mul := 1.0
+
+	if sign == '-' {
+		mul = -1.0
+	}
+
+	unit, value := splitAlphaNum(timeStr[1:])
+
+	timeVal, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return 0.0, err
+	}
+
+	for unitsList, multiplier := range units {
+		match := false
+		for _, u := range strings.Split(unitsList, ",") {
+			if u == unit {
+				mul *= multiplier
+				match = true
+				break
+			}
+		}
+		if match {
+			break
+		}
+	}
+
+	timeVal *= mul
+
+	return now + timeVal, nil
+}
+
+func splitAlphaNum(str string) (string, string) {
+	alpha := ""
+	num := ""
+	for i := 0; i < len(str); i++ {
+		if unicode.IsLetter(rune(str[i])) {
+			alpha = str[i:len(str)]
+		} else {
+			num = num + string(str[i])
+		}
+	}
+	return alpha, num
+}
+
+var parsers = map[string]timeStringParser{
+	rfc3339Pattern:    rfc3339Parser,
+	timestampPattern:  timestampParser,
+	manualTimePattern: manualStringParser,
+}
+
+func parseTime(timeStr string) (float64, error) {
+	for pattern, parser := range parsers {
+		match, err := regexp.MatchString(pattern, timeStr)
+		if err != nil {
+			return 0.0, err
+		}
+		if match {
+			return parser(timeStr)
+		}
+	}
+	return 0.0, fmt.Errorf("invalid time string")
 }
