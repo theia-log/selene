@@ -16,6 +16,9 @@ import (
 	"github.com/theia-log/selene/model"
 )
 
+// EventCommand implements the 'event' subcommand.
+// Takes a list of arguments to the event subcommand, parses it and then calls
+// RunEventGenerator with the parsed query flags.
 func EventCommand(args []string) error {
 	eventFlags, flagSet := SetupEventGeneratorFlags()
 	if err := flagSet.Parse(args); err != nil {
@@ -24,6 +27,8 @@ func EventCommand(args []string) error {
 	return RunEventGenerator(eventFlags)
 }
 
+// RunEventGenerator generates new event with the given properties and sends it
+// to the Theia server.
 func RunEventGenerator(flags *EventFlags) error {
 	eventTemplate := &model.Event{
 		ID:      asString(flags.ID),
@@ -138,14 +143,14 @@ func newFromTemplate(template *model.Event) *model.Event {
 	return ev
 }
 
-var rfc3339Pattern = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3}){0,1}((-|\\+)\\d{4}){0,1}$"
+var rfc3339Pattern = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}((-|\\+|Z)\\d{2}:\\d{2}){0,1}$"
 var timestampPattern = "^\\d+(\\.\\d+){0,1}$"
 var manualTimePattern = "^(\\+|-)\\d+(\\w{1,7}){0,1}$"
 
 type timeStringParser func(timeStr string) (float64, error)
 
 func rfc3339Parser(timeStr string) (float64, error) {
-	tm, err := time.Parse("", timeStr)
+	tm, err := time.Parse(time.RFC3339, timeStr)
 	if err != nil {
 		return 0.0, err
 	}
@@ -186,7 +191,8 @@ func manualStringParser(timeStr string) (float64, error) {
 
 	for unitsList, multiplier := range units {
 		match := false
-		for _, u := range strings.Split(unitsList, ",") {
+		aliases := strings.Split(unitsList, ",")
+		for _, u := range aliases {
 			if u == unit {
 				mul *= multiplier
 				match = true
@@ -209,6 +215,7 @@ func splitAlphaNum(str string) (string, string) {
 	for i := 0; i < len(str); i++ {
 		if unicode.IsLetter(rune(str[i])) {
 			alpha = str[i:len(str)]
+			break
 		} else {
 			num = num + string(str[i])
 		}
