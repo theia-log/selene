@@ -23,11 +23,11 @@ func TestPatterns_rfc3339(t *testing.T) {
 		panic(err)
 	}
 
-	if !pattern.Match([]byte("2019-10-11T12:13:14.900-0000")) {
+	if !pattern.Match([]byte("2019-10-11T12:13:14-00:00")) {
 		t.Fatal("Should match the time string.")
 	}
 
-	if !pattern.Match([]byte("2019-10-11T12:13:14.987+1234")) {
+	if !pattern.Match([]byte("2019-10-11T12:13:14+12:34")) {
 		t.Fatal("Should match the time string.")
 	}
 
