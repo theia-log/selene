@@ -9,3 +9,5 @@
 ![selene logo](selene.png) 
 
 Selene is a client library and watcher for theia written in Go.
+
+![Selene Example](selene-example.gif)
