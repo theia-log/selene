@@ -117,6 +117,32 @@ func TestParseTime_manualString(t *testing.T) {
 
 	testString("-1s", -1000.0, 100.0)
 	testString("+1second", 1000.0, 100.0)
-	testString("+1seconds", 1000.0, 100.0)
+	testString("+2seconds", 2000.0, 100.0)
 
+	testString("+1m", 1000*60.0, 100.0)
+	testString("+1min", 1000*60.0, 100.0)
+	testString("-3minutes", -3*1000*60.0, 100.0)
+
+	testString("-1h", -1000*60*60.0, 100.0)
+	testString("+4hrs", 4*1000*60*60.0, 100.0)
+	testString("+1hour", 1000*60*60.0, 100.0)
+	testString("+3hours", 3*1000*60*60.0, 100.0)
+
+	testString("+2d", 2*1000*60*60*24.0, 100.0)
+	testString("-2days", -2*1000*60*60*24.0, 100.0)
+	testString("+1day", 1000*60*60*24.0, 100.0)
+
+	testString("-1w", -1000*60*60*24*7.0, 100.0)
+	testString("-3weeks", -3*1000*60*60*24*7.0, 100.0)
+	testString("+1week", 1000*60*60*24*7.0, 100.0)
+
+	testString("+1mn", 1000*60*60*24*30.0, 100.0)
+	testString("+2mn", 2*1000*60*60*24*30.0, 100.0)
+	testString("-1month", -1000*60*60*24*30.0, 100.0)
+	testString("-3months", -3*1000*60*60*24*30.0, 100.0)
+
+	testString("-1y", -1000*60*60*24*365.0, 100.0)
+	testString("+1y", 1000*60*60*24*365.0, 100.0)
+	testString("-2yr", -2*1000*60*60*24*365.0, 100.0)
+	testString("-3years", -3*1000*60*60*24*365.0, 100.0)
 }
