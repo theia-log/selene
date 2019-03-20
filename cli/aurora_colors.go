@@ -60,7 +60,7 @@ func (h TypeHeuristics) Detect(text string) string {
 var KnownTypes = TypeHeuristics{
 	"error": func(text string) bool {
 		text = strings.TrimSpace(strings.ToLower(text))
-		match, err := regexp.MatchString("\\[?err?(or)?\\]?", text)
+		match, err := regexp.MatchString("\\[?\\berr?(or)?\\b\\]?", text)
 		if err != nil {
 			panic(err)
 		}
@@ -68,7 +68,7 @@ var KnownTypes = TypeHeuristics{
 	},
 	"warning": func(text string) bool {
 		text = strings.TrimSpace(strings.ToLower(text))
-		match, err := regexp.MatchString("\\[?warn(ing)?\\]?", text)
+		match, err := regexp.MatchString("\\[?\\bwarn(ing)?\\b\\]?", text)
 		if err != nil {
 			panic(err)
 		}
@@ -76,7 +76,7 @@ var KnownTypes = TypeHeuristics{
 	},
 	"success": func(text string) bool {
 		text = strings.TrimSpace(strings.ToLower(text))
-		match, err := regexp.MatchString("\\[?success\\]?", text)
+		match, err := regexp.MatchString("\\[?\\bsuccess\\b\\]?", text)
 		if err != nil {
 			panic(err)
 		}
@@ -84,7 +84,7 @@ var KnownTypes = TypeHeuristics{
 	},
 	"info": func(text string) bool {
 		text = strings.TrimSpace(strings.ToLower(text))
-		match, err := regexp.MatchString("\\[?info\\]?", text)
+		match, err := regexp.MatchString("\\[?\\binfo\\b\\]?", text)
 		if err != nil {
 			panic(err)
 		}
