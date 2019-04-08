@@ -11,3 +11,14 @@
 Selene is a client library and watcher for theia written in Go.
 
 ![Selene Example](selene-showcase.gif)
+
+# Installation
+
+## Installation with Gox
+
+To install it simply do:
+
+```
+go get github.com/theia-log/selene
+
+```
