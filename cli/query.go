@@ -137,9 +137,13 @@ func PrintEvent(event *model.Event, format string, colors Colors) {
 	if !strings.HasSuffix(content, "\n") {
 		content = content + "\n"
 	}
+	idShort := event.ID
+	if len(event.ID) > 7 {
+		idShort = event.ID[0:7]
+	}
 	te := &templateEvent{
 		ID:        colors.ColoredText(Context{"color": "secondary"}, event.ID),
-		IDShort:   colors.ColoredText(Context{"color": "secondary"}, fmt.Sprintf("%s", event.ID[0:7])),
+		IDShort:   colors.ColoredText(Context{"color": "secondary"}, fmt.Sprintf("%7s", idShort)),
 		Content:   colors.ColoredContent(Context{}, content),
 		Source:    colors.ColoredText(Context{"color": "secondary"}, event.Source),
 		Timestamp: colors.ColoredText(Context{"color": "info"}, fmt.Sprintf("%f", event.Timestamp)),
